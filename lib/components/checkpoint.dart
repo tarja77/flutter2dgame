@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flame/collisions.dart';
 import 'package:flame/components.dart';
 import 'package:flame_tiled/flame_tiled.dart';
+import 'package:flametest/components/player.dart';
 import 'package:flametest/pixel_adventure.dart';
 
 class Checkpoint extends SpriteAnimationComponent
@@ -10,6 +11,8 @@ class Checkpoint extends SpriteAnimationComponent
   final TiledObject tiledObject;
 
   Checkpoint({required this.tiledObject});
+
+  bool reachedCheckpoint = false;
 
   @override
   FutureOr<void> onLoad() {
@@ -27,9 +30,18 @@ class Checkpoint extends SpriteAnimationComponent
     return super.onLoad();
   }
 
-  @override
-  void onCollision(Set<Vector2> intersectionPoints, PositionComponent other) {
-    // TODO: implement onCollision
-    super.onCollision(intersectionPoints, other);
+  void reachedCheckPoint() {
+    if(!reachedCheckpoint){
+      reachedCheckpoint=true;
+      animation = SpriteAnimation.fromFrameData(
+          game.images.fromCache(
+              'Items/Checkpoints/Checkpoint/Checkpoint (Flag Out) (64x64).png'),
+          SpriteAnimationData.sequenced(
+              amount: 26,
+              stepTime: 0.05,
+              textureSize: Vector2.all(64),
+              loop: false));
+    }
+
   }
 }

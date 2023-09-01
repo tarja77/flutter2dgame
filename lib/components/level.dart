@@ -33,7 +33,7 @@ class Level extends World with HasGameRef<PixelAdventure> {
 
   void _scrollingBackground() {
     final backgroundLayer = level.tileMap.getLayer("Background");
-    print(backgroundLayer);
+
     const tileSize = 64;
     final numTilesY = (game.size.y / tileSize).floor();
     final numTilesX = (game.size.x / tileSize).floor();

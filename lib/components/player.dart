@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flame/collisions.dart';
 import 'package:flame/components.dart';
+import 'package:flametest/components/checkpoint.dart';
 import 'package:flametest/components/custom_hitbox.dart';
 import 'package:flametest/components/saw.dart';
 import 'package:flametest/components/utils.dart';
@@ -91,6 +92,10 @@ class Player extends SpriteAnimationGroupComponent
     if(other is Saw){
 
       _respawn();
+    }
+    if(other is Checkpoint){
+
+      other.reachedCheckPoint();
     }
     super.onCollision(intersectionPoints, other);
   }
