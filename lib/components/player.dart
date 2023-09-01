@@ -12,13 +12,14 @@ import 'package:flutter/services.dart';
 import 'collision_block.dart';
 import 'fruit.dart';
 
-enum PlayerState { idle, running, jumping, falling,hit,appearing}
+enum PlayerState { idle, running, jumping, falling,hit,appearing,disappearing}
 
 class Player extends SpriteAnimationGroupComponent
     with HasGameRef<PixelAdventure>, KeyboardHandler ,CollisionCallbacks{
   String character;
+  Function()? onFinish;
 
-  Player({position, this.character = 'Mask Dude'}) : super(position: position);
+  Player({position, this.character = 'Mask Dude',this.onFinish}) : super(position: position);
 
   late final SpriteAnimation idleAnimation;
   late final SpriteAnimation runningAnimation;
@@ -26,6 +27,7 @@ class Player extends SpriteAnimationGroupComponent
   late final SpriteAnimation fallingAnimation;
   late final SpriteAnimation hitAnimation;
   late final SpriteAnimation appearingAnimation;
+  late final SpriteAnimation disappearingAnimation;
 
   double moveSpeed = 100;
   double horizontalMovement = 0;
@@ -42,7 +44,7 @@ class Player extends SpriteAnimationGroupComponent
   bool isOnGround = false;
   bool hasJumped = false;
   bool gotHit = false;
-
+  bool reachedCheckpoint = false;
   @override
   FutureOr<void> onLoad() {
     _loadAllAnimations();
@@ -58,7 +60,7 @@ class Player extends SpriteAnimationGroupComponent
 
   @override
   void update(double dt) {
-    if(!gotHit){
+    if(!gotHit&&!reachedCheckpoint){
       _updatePlayerState();
       _updatePlayerMovement(dt);
       _checkHorizontalCollision();
@@ -93,9 +95,9 @@ class Player extends SpriteAnimationGroupComponent
 
       _respawn();
     }
-    if(other is Checkpoint){
-
+    if(other is Checkpoint&&!reachedCheckpoint){
       other.reachedCheckPoint();
+      _reachedCheckpoint();
     }
     super.onCollision(intersectionPoints, other);
   }
@@ -107,6 +109,7 @@ class Player extends SpriteAnimationGroupComponent
     fallingAnimation = _spriteAnimation('Fall', 1);
     hitAnimation = _spriteAnimation('Hit', 7);
     appearingAnimation = _specialSpriteAnimation('Appearing', 7);
+    disappearingAnimation = _specialSpriteAnimation('Desappearing', 7);
 
     animations = {
       PlayerState.idle: idleAnimation,
@@ -114,7 +117,8 @@ class Player extends SpriteAnimationGroupComponent
       PlayerState.jumping: jumpingAnimation,
       PlayerState.falling: fallingAnimation,
       PlayerState.hit: hitAnimation,
-      PlayerState.appearing: appearingAnimation
+      PlayerState.appearing: appearingAnimation,
+      PlayerState.disappearing: disappearingAnimation
     };
     current = PlayerState.idle;
   }
@@ -244,5 +248,19 @@ class Player extends SpriteAnimationGroupComponent
 
 
 
+  }
+
+  void _reachedCheckpoint() {
+    reachedCheckpoint=true;
+    if(scale.x>0){
+      position=position-Vector2.all(32);
+    }else if(scale.x<0){
+      position=position+Vector2(32,-32);
+    }
+
+    current=PlayerState.disappearing;
+    Future.delayed(const Duration(milliseconds: 250),(){
+
+    });
   }
 }

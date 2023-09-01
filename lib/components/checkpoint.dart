@@ -3,7 +3,6 @@ import 'dart:async';
 import 'package:flame/collisions.dart';
 import 'package:flame/components.dart';
 import 'package:flame_tiled/flame_tiled.dart';
-import 'package:flametest/components/player.dart';
 import 'package:flametest/pixel_adventure.dart';
 
 class Checkpoint extends SpriteAnimationComponent
@@ -19,7 +18,7 @@ class Checkpoint extends SpriteAnimationComponent
     position = Vector2(tiledObject.x, tiledObject.y);
     size = Vector2(tiledObject.width, tiledObject.height);
     add(RectangleHitbox(
-        position: Vector2(18, 96),
+        position: Vector2(18, 56),
         size: Vector2(12, 8),
         collisionType: CollisionType.passive));
     animation = SpriteAnimation.fromFrameData(
@@ -31,8 +30,8 @@ class Checkpoint extends SpriteAnimationComponent
   }
 
   void reachedCheckPoint() {
-    if(!reachedCheckpoint){
-      reachedCheckpoint=true;
+    if (!reachedCheckpoint) {
+      reachedCheckpoint = true;
       animation = SpriteAnimation.fromFrameData(
           game.images.fromCache(
               'Items/Checkpoints/Checkpoint/Checkpoint (Flag Out) (64x64).png'),
@@ -41,7 +40,18 @@ class Checkpoint extends SpriteAnimationComponent
               stepTime: 0.05,
               textureSize: Vector2.all(64),
               loop: false));
+      Future.delayed(const Duration(milliseconds: 1300),(){
+        animation = SpriteAnimation.fromFrameData(
+            game.images.fromCache(
+                'Items/Checkpoints/Checkpoint/Checkpoint (Flag Idle)(64x64).png'),
+            SpriteAnimationData.sequenced(
+              amount: 10,
+              stepTime: 0.05,
+              textureSize: Vector2.all(64),
+            ));
+      });
     }
+
 
   }
 }
