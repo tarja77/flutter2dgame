@@ -38,13 +38,15 @@ class Player extends SpriteAnimationGroupComponent
   CustomHitbox(offsetX: 10, offsetY: 4, width: 14, height: 28);
 
   final double _gravity = 9.0;
-  final double _jumpForce = 260;
+  final double _jumpForce = 280;
   final double _terminalVelocity = 300;
   final double stepTime = 0.05;
   bool isOnGround = false;
   bool hasJumped = false;
   bool gotHit = false;
   bool reachedCheckpoint = false;
+  double fixedDeltaTime=1/60;
+  double accumulatedTime=0;
   @override
   FutureOr<void> onLoad() {
     _loadAllAnimations();
@@ -60,13 +62,18 @@ class Player extends SpriteAnimationGroupComponent
 
   @override
   void update(double dt) {
-    if(!gotHit&&!reachedCheckpoint){
-      _updatePlayerState();
-      _updatePlayerMovement(dt);
-      _checkHorizontalCollision();
-      _applyGravity(dt);
-      _checkVerticalCollision();
+    accumulatedTime+=dt;
+    while(accumulatedTime>=fixedDeltaTime){
+      if(!gotHit&&!reachedCheckpoint){
+        _updatePlayerState();
+        _updatePlayerMovement(fixedDeltaTime);
+        _checkHorizontalCollision();
+        _applyGravity(fixedDeltaTime);
+        _checkVerticalCollision();
+      }
+      accumulatedTime-=fixedDeltaTime;
     }
+
 
     super.update(dt);
   }
@@ -86,8 +93,10 @@ class Player extends SpriteAnimationGroupComponent
     return super.onKeyEvent(event, keysPressed);
   }
 
+
+
   @override
-  void onCollision(Set<Vector2> intersectionPoints, PositionComponent other) {
+  void onCollisionStart(Set<Vector2> intersectionPoints, PositionComponent other) {
     if(other is Fruit){
       other.collidingWithPlayer();
     }
@@ -99,7 +108,7 @@ class Player extends SpriteAnimationGroupComponent
       other.reachedCheckPoint();
       _reachedCheckpoint();
     }
-    super.onCollision(intersectionPoints, other);
+    super.onCollisionStart(intersectionPoints, other);
   }
 
   void _loadAllAnimations() {
@@ -107,7 +116,7 @@ class Player extends SpriteAnimationGroupComponent
     runningAnimation = _spriteAnimation('Run', 12);
     jumpingAnimation = _spriteAnimation('Jump', 1);
     fallingAnimation = _spriteAnimation('Fall', 1);
-    hitAnimation = _spriteAnimation('Hit', 7);
+    hitAnimation = _spriteAnimation('Hit', 7)..loop=false;
     appearingAnimation = _specialSpriteAnimation('Appearing', 7);
     disappearingAnimation = _specialSpriteAnimation('Desappearing', 7);
 
@@ -134,6 +143,7 @@ class Player extends SpriteAnimationGroupComponent
     return SpriteAnimation.fromFrameData(
         game.images.fromCache("Main Characters/$state (96x96).png"),
         SpriteAnimationData.sequenced(
+          loop: false,
             amount: amount, stepTime: stepTime, textureSize: Vector2.all(96)));
   }
 
@@ -227,24 +237,25 @@ class Player extends SpriteAnimationGroupComponent
     }
   }
 
-  void _respawn() {
+  void _respawn()async {
     gotHit = true;
     current=PlayerState.hit;
-    Future.delayed(const Duration(milliseconds: 350),(){
-      current=PlayerState.appearing;
-      scale.x=1;
-      position=startingPosition-Vector2.all(32);
-      current=PlayerState.appearing;
-      Future.delayed(const Duration(milliseconds: 350),(){
-        velocity=Vector2.zero();
-        position=startingPosition;
-        _updatePlayerState();
+    await animationTicker?.completed;
+    animationTicker?.reset();
+    scale.x=1;
+    position=startingPosition-Vector2.all(32);
+    current=PlayerState.appearing;
+    await animationTicker?.completed;
+    animationTicker?.reset();
+
+    velocity=Vector2.zero();
+    position=startingPosition;
+    _updatePlayerState();
+
 
         Future.delayed(const Duration(milliseconds: 400),(){
           gotHit = false;
         });
-      });
-    });
 
 
 
@@ -260,6 +271,7 @@ class Player extends SpriteAnimationGroupComponent
 
     current=PlayerState.disappearing;
     Future.delayed(const Duration(milliseconds: 250),(){
+      removeFromParent();
 
     });
   }
