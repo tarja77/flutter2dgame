@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flame/collisions.dart';
 import 'package:flame/components.dart';
+import 'package:flame_audio/flame_audio.dart';
 import 'package:flametest/components/checkpoint.dart';
 import 'package:flametest/components/custom_hitbox.dart';
 import 'package:flametest/components/saw.dart';
@@ -17,9 +18,9 @@ enum PlayerState { idle, running, jumping, falling,hit,appearing,disappearing}
 class Player extends SpriteAnimationGroupComponent
     with HasGameRef<PixelAdventure>, KeyboardHandler ,CollisionCallbacks{
   String character;
-  Function()? onFinish;
 
-  Player({position, this.character = 'Mask Dude',this.onFinish}) : super(position: position);
+
+  Player({position, this.character = 'Mask Dude'}) : super(position: position);
 
   late final SpriteAnimation idleAnimation;
   late final SpriteAnimation runningAnimation;
@@ -51,6 +52,7 @@ class Player extends SpriteAnimationGroupComponent
   FutureOr<void> onLoad() {
     _loadAllAnimations();
    // debugMode = true;
+    print('start pos X${position.x},Y${position.y}');
     startingPosition=Vector2(position.x, position.y);
     add(
       RectangleHitbox(
@@ -159,10 +161,15 @@ class Player extends SpriteAnimationGroupComponent
   }
 
   void _playerJump(double dt) {
-    velocity.y = -_jumpForce;
-    position.y += velocity.y * dt;
-    isOnGround = false;
-    hasJumped = false;
+    if(game.playSounds){
+      FlameAudio.play('jump.wav',volume: game.soundVolume);
+    }
+      velocity.y = -_jumpForce;
+      position.y += velocity.y * dt;
+      isOnGround = false;
+      hasJumped = false;
+
+
   }
 
   void _updatePlayerState() {
@@ -238,6 +245,9 @@ class Player extends SpriteAnimationGroupComponent
   }
 
   void _respawn()async {
+    if(game.playSounds){
+      FlameAudio.play('hit.wav',volume: game.soundVolume);
+    }
     gotHit = true;
     current=PlayerState.hit;
     await animationTicker?.completed;
@@ -261,8 +271,11 @@ class Player extends SpriteAnimationGroupComponent
 
   }
 
-  void _reachedCheckpoint() {
+  void _reachedCheckpoint()  async{
     reachedCheckpoint=true;
+    if(game.playSounds){
+      FlameAudio.play('disappear.wav',volume: game.soundVolume);
+    }
     if(scale.x>0){
       position=position-Vector2.all(32);
     }else if(scale.x<0){
@@ -270,8 +283,13 @@ class Player extends SpriteAnimationGroupComponent
     }
 
     current=PlayerState.disappearing;
-    Future.delayed(const Duration(milliseconds: 250),(){
-      removeFromParent();
+    await animationTicker?.completed;
+    animationTicker?.reset();
+    reachedCheckpoint=false;
+    position=Vector2.all(-640);
+
+      Future.delayed(const Duration(seconds: 1),(){
+        game.loadNextLevel();
 
     });
   }

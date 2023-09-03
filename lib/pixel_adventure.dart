@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:io';
 
 
 import 'package:flame/components.dart';
@@ -15,18 +16,18 @@ class PixelAdventure extends FlameGame
   @override
   Color backgroundColor() => const Color(0xFF211F30);
 
-   late Player player;
+    late Player player;
   late  CameraComponent cam;
 
   late JoystickComponent joystick;
-  bool showControls=true;
+  bool showControls=Platform.isIOS||Platform.isAndroid;
+  bool playSounds=true;
+  double soundVolume=1.0;
   List<String> levelNames =['Level-01','Level-02'];
   int currentLevelIndex=0;
   @override
   FutureOr<void> onLoad() async {
-    player =Player(character: 'Mask Dude',onFinish: (){
-      loadNextLevel();
-    });
+
     await images.loadAllImages();
  _loadLevel();
 
@@ -74,16 +75,21 @@ class PixelAdventure extends FlameGame
         player.horizontalMovement=0;
     }
   }
-  void loadNextLevel(){
-    if(currentLevelIndex<levelNames.length-1){
+  void loadNextLevel() {
+    removeWhere((component) => component is Level);
+
+    if (currentLevelIndex < levelNames.length - 1) {
       currentLevelIndex++;
       _loadLevel();
-    }else{
-      currentLevelIndex=0;
+    } else {
+      // no more levels
+      currentLevelIndex = 0;
+      _loadLevel();
     }
   }
 
   void _loadLevel() {
+    player=Player(character: 'Mask Dude');
     Future.delayed(const Duration(seconds: 1),(){
       Level world =Level(levelName: levelNames[currentLevelIndex], player: player);
       cam = CameraComponent.withFixedResolution(
