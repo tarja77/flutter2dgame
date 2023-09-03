@@ -8,6 +8,7 @@ import 'package:flametest/components/fruit.dart';
 import 'package:flametest/components/saw.dart';
 import 'package:flametest/pixel_adventure.dart';
 
+import 'chicken.dart';
 import 'player.dart';
 
 class Level extends World with HasGameRef<PixelAdventure> {
@@ -72,6 +73,11 @@ class Level extends World with HasGameRef<PixelAdventure> {
           case 'Checkpoint':
             final checkpoint = Checkpoint(tiledObject: spawnPoint);
             add(checkpoint);
+
+            break;
+          case 'Chicken':
+            final chicken = Chicken(tiledObject: spawnPoint);
+            add(chicken);
 
             break;
           default:
