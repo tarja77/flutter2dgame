@@ -37,6 +37,7 @@ class Chicken extends SpriteAnimationGroupComponent
     return super.onLoad();
   }
 
+
   @override
   void update(double dt) {
     _movement(dt);
